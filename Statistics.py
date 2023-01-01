@@ -11,11 +11,14 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from pathlib import Path
 
+import scipy
 from scipy.stats import kstest
 from scipy.stats import shapiro
 from scipy.stats import lognorm
 from scipy.stats import ranksums
 from scipy.stats import f_oneway
+from scipy.stats import tmean
+from scipy.stats import tstd
 
 #Import of main dataset and creating a target variable, also analysing for outliers of the target variable predecessor 
 rds = pd.read_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\referenceDataSet.csv")
@@ -139,8 +142,8 @@ Improvments in Biodiversity of birds:
     Mao Exterminated all the birds, gave way to plague of locusts.... 
 """
 bird = rds[['TIME_PERIOD', 'geo', 'birdBiodiversityIndex']]
-bird_11_13 = gini[gini['TIME_PERIOD'].isin([2011, 2012])].dropna()
-bird_18_20 = gini[gini['TIME_PERIOD'].isin([2018, 2019])].dropna()
+bird_11_13 = bird[bird['TIME_PERIOD'].isin([2011, 2012])].dropna()
+bird_18_20 = bird[bird['TIME_PERIOD'].isin([2018, 2019])].dropna()
 
 sns.lineplot(data = bird , x='TIME_PERIOD',  y= 'birdBiodiversityIndex', color="skyblue", label="AVG Biodiversity")
 plt.show()
@@ -171,6 +174,22 @@ f_oneway(bird_11_13['birdBiodiversityIndex'], bird_18_20['birdBiodiversityIndex'
 
 
 
+"""
+STATISTICS QUESTION 3
+This section will compare Ireland in terms of research spending on agriculture when compared to 
+"""
+rdsIE = rds[rds['geo'] == 'IE']
+# Select only the rows for the specified country
+
+agriSpending = rds[['TIME_PERIOD', 'geo', 'Agricultural sciences']]
+agriSpending_IE = agriSpending[agriSpending['geo'] == 'IE'].dropna()
+agriSpending_EU = agriSpending[agriSpending['geo'] != 'IE'].dropna()
+
+agriSpendingCompare = agriSpending_EU.merge(agriSpending_IE, on='TIME_PERIOD', how='inner', suffixes=('_EU', '_IE'))
+
+agriSpendingCompare['difference'] = 
+
+plt.show()
 
 
 
