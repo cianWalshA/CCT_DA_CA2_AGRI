@@ -40,6 +40,7 @@ plt.show()
 
 
 """
+STATISTICS QUESTION 2
 This section will compare populations, such as early Harmonised Risk vs later, early Median incomes, male median incomes vs female, 
 """
 """
@@ -75,6 +76,9 @@ medIncome = rds[['TIME_PERIOD', 'geo', 'MED_EF', 'MED_EM']]
 medIncome_M = rds[['TIME_PERIOD', 'geo', 'MED_EM']].dropna()
 medIncome_F = rds[['TIME_PERIOD', 'geo', 'MED_EF']].dropna()
 
+sns.lineplot(data = medIncome_M , x='TIME_PERIOD',  y= 'MED_EM', color="skyblue", label="Median Male Income")
+sns.lineplot(data = medIncome_F , x='TIME_PERIOD',  y= 'MED_EF', color="red", label="Median Female Income")
+plt.show()
 print(shapiro(medIncome_M['MED_EM']))
 print(kstest(medIncome_M['MED_EM'], 'norm'))
 
@@ -96,8 +100,73 @@ f_oneway(medIncome_M['MED_EM'], medIncome_F['MED_EF'])
 #CAN ASESS USING THIS AND THE HISTPLOT THAT THE POPULATIONS ARE LIKELY SIMILAR. AS P VALUE IS GREATER THAN 0.05 @0.325 
 
 
+"""
+GINI WELLBEING IMPROVEMENT TEST
+"""
+gini = rds[['TIME_PERIOD', 'geo', 'gini']]
+gini_11_13 = gini[gini['TIME_PERIOD'].isin([2011, 2012, 2013])].dropna()
+gini_18_20 = gini[gini['TIME_PERIOD'].isin([2018, 2019, 2020])].dropna()
 
 
+sns.lineplot(data = gini , x='TIME_PERIOD',  y= 'gini', color="skyblue", label="AVG GINI")
+#sns.lineplot(data = gini_18_20 , x='TIME_PERIOD',  y= 'gini', color="red", label="AVG GINI 18-20")
+plt.show()
+
+print(shapiro(gini_11_13['gini']))
+print(kstest(gini_11_13['gini'], 'norm'))
+
+print(shapiro(gini_18_20['gini']))
+print(kstest(gini_18_20['gini'], 'norm'))
+
+print(gini_11_13['gini'].describe())
+print(gini_18_20['gini'].describe())
+
+#It is clear these are all non normal distributions, lets plot to investigate similarities
+
+sns.histplot(data = gini_11_13 , x = 'gini', color="skyblue", label="previous", kde=True)
+sns.histplot(data = gini_18_20 , x= 'gini', color="red", label="Current" , kde=True)
+plt.show()
+
+#It definitely appears that the risk levels have in general shifted down, with some exceptions.
+#As the data is shown as non normal using Shapiro and KSTEST, will compare using nonparametric tests.
+gini_11_13['gini']
+ranksums(gini_11_13['gini'], gini_18_20['gini'])
+f_oneway(gini_11_13['gini'], gini_18_20['gini'])
+#CAN ASESS USING THIS AND THE HISTPLOT THAT THE POPULATIONS ARE LIKELY SIMILAR. AS P VALUE IS GREATER THAN 0.05 @0.325 
+
+"""
+Improvments in Biodiversity of birds:
+    Mao Exterminated all the birds, gave way to plague of locusts.... 
+"""
+bird = rds[['TIME_PERIOD', 'geo', 'birdBiodiversityIndex']]
+bird_11_13 = gini[gini['TIME_PERIOD'].isin([2011, 2012])].dropna()
+bird_18_20 = gini[gini['TIME_PERIOD'].isin([2018, 2019])].dropna()
+
+sns.lineplot(data = bird , x='TIME_PERIOD',  y= 'birdBiodiversityIndex', color="skyblue", label="AVG Biodiversity")
+plt.show()
+
+
+print(shapiro(bird_11_13['birdBiodiversityIndex']))
+print(kstest(bird_11_13['birdBiodiversityIndex'], 'norm'))
+
+print(shapiro(bird_18_20['birdBiodiversityIndex']))
+print(kstest(bird_18_20['birdBiodiversityIndex'], 'norm'))
+
+print(bird_11_13['birdBiodiversityIndex'].describe())
+print(bird_18_20['birdBiodiversityIndex'].describe())
+
+#It is clear these are all non normal distributions, lets plot to investigate similarities
+
+sns.histplot(data = bird_11_13 , x = 'birdBiodiversityIndex', color="skyblue", label="previous", kde=True)
+sns.histplot(data = bird_18_20 , x= 'birdBiodiversityIndex', color="red", label="Current" , kde=True)
+plt.show()
+
+#It definitely appears that the risk levels have in general shifted down, with some exceptions.
+#As the data is shown as non normal using Shapiro and KSTEST, will compare using nonparametric tests.
+gini_11_13['birdBiodiversityIndex']
+ranksums(bird_11_13['birdBiodiversityIndex'], bird_18_20['birdBiodiversityIndex'])
+f_oneway(bird_11_13['birdBiodiversityIndex'], bird_18_20['birdBiodiversityIndex'])
+#CAN ASESS USING THIS AND THE HISTPLOT THAT THE POPULATIONS ARE LIKELY SIMILAR. AS P VALUE IS GREATER THAN 0.05 @0.325 
 
 
 
