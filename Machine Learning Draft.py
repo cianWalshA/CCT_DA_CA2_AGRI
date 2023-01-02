@@ -48,16 +48,16 @@ from sklearn.pipeline import make_pipeline
 
 #Import of main dataset and creating a target variable, also analysing for outliers of the target variable predecessor 
 rds = pd.read_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\referenceDataSet.csv")
-#Harmonised Risk indicator is based off AVG from 2011-2013, so only want to keep 2013 differences onwards for calculation.
-rds = rds[~rds['TIME_PERIOD'].isin([2011, 2012])]
-colsToDrop = ['Unnamed: 0', 'subst_cat', 'geo', 'TIME_PERIOD' ]
+
+colsToDrop = ['Unnamed: 0', 'geo', 'date' ]
+
 rds = rds.drop(colsToDrop, axis=1)
 colsToDrop2 = list(rds.filter(regex=r'_unit').columns) 
 rds = rds.drop(colsToDrop2, axis=1)
 rds = rds._get_numeric_data()
 
-Xfull = rds.drop('harmRiskInd', axis=1)
-Yfull = rds['harmRiskInd'].values
+Xfull = rds.drop('HICP_n12m', axis=1)
+Yfull = rds['HICP_n12m'].values
 #global X_train, Y_train, X_val, X_finaltest, Y_val, Y_finaltest
 #random_state = 123 chosen for reporducability and because who doesn't love a nice number like that
 
@@ -90,8 +90,8 @@ def model_test(m):
     #Apply a scaler to the data using pipeline
     model = Pipeline ([('standardize', MinMaxScaler(feature_range = (0,1))), (name, model_type())])
     #push through pipeline
-    mse = cross_val_score(model, X_train, Y_train, cv=KFold(n_splits=2), scoring = 'neg_mean_squared_error', n_jobs=-1)
-    r2 = cross_val_score(model, X_train, Y_train, cv=KFold(n_splits=2), scoring = 'r2', n_jobs=-1)
+    mse = cross_val_score(model, X_train, Y_train, cv=KFold(n_splits=3), scoring = 'neg_mean_squared_error', n_jobs=-1)
+    r2 = cross_val_score(model, X_train, Y_train, cv=KFold(n_splits=3), scoring = 'r2', n_jobs=-1)
     runtime = int(time_t.time() - startRun)
     
     print('MODEL END')
@@ -107,7 +107,7 @@ resultsOfModelSearch = pd.DataFrame.from_dict(
                                               ,orient='index'
                                               ,columns=['name', 'model', 'r2', 'median_r2', 'mse', 'median_mse', 'runtime']
                                              )    
-
+resultsOfModelSearch = resultsOfModelSearch[resultsOfModelSearch['median_r2']>0]
 
 resultsOfModelSearch.to_csv(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102\Run01.csv') 
 resultsOfModelSearch_save_test = pd.read_csv(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102\Run01.csv')
@@ -127,9 +127,21 @@ ax1.set_ylabel('Mean Square Error')
 ax1.invert_yaxis()
 ax1.set_title("Median Mean Square Error")
 ax1.figure.tight_layout()
-ax1.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA1\finalRun\medianMSE_2022111.png', dpi= 600) 
+ax1.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102\medianMSE_20230102.png', dpi= 600) 
 
-
+fig, ax2 = plt.subplots(figsize=(10,6))
+ax2 = sns.barplot(x="name"
+                  ,y="median_r2"
+                  ,data=resultsOfModelSearch 
+                  ,palette='mako'
+                  ,order=resultsOfModelSearch.sort_values('median_r2', ascending=False).name 
+                 )
+ax2.set_xticklabels(resultsOfModelSearch.sort_values('median_r2', ascending=False).name,rotation=90)
+ax2.set_xlabel('Model')
+ax2.set_ylabel('R-Squared')
+ax2.set_title("Median R-Squared")
+ax2.figure.tight_layout()
+ax2.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102\medianR2_20230102.png', dpi= 600) 
 
 
 
