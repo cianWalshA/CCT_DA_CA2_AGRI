@@ -49,9 +49,9 @@ from sklearn.pipeline import make_pipeline
 #Import of main dataset and creating a target variable, also analysing for outliers of the target variable predecessor 
 rds = pd.read_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\referenceDataSet.csv")
 
-colsToDrop = ['Unnamed: 0', 'geo', 'date' ]
+#colsToDrop = ['Unnamed: 0', 'geo', 'date' ]
 
-rds = rds.drop(colsToDrop, axis=1)
+#rds = rds.drop(colsToDrop, axis=1)
 colsToDrop2 = list(rds.filter(regex=r'_unit').columns) 
 rds = rds.drop(colsToDrop2, axis=1)
 rds = rds._get_numeric_data()

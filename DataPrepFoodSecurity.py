@@ -64,7 +64,9 @@ HICP['date_n6M'] = HICP['date'] + pd.offsets.DateOffset(months=6)
 HICP['date_l6M'] = HICP['date'] + pd.offsets.DateOffset(months=-6)
 HICP = HICP.drop(columns = ['DATAFLOW', 'LAST UPDATE', 'freq', 'unit', 'coicop', 'TIME_PERIOD', 'OBS_FLAG'])
 HICP = HICP.rename(columns = {"OBS_VALUE":"HICP"})
+print(HICP.head(10))
 HICP = pd.merge(HICP, HICP[['geo', 'date_n12M','HICP']], left_on=['geo', 'date'], right_on=['geo', 'date_n12M'],suffixes=('', '_n12m') )
+print(HICP.head(10))
 HICP = pd.merge(HICP, HICP[['geo', 'date_n6M','HICP']],left_on=['geo', 'date'], right_on=['geo', 'date_n6M'],suffixes=('', '_n6m') )
 HICP = HICP.drop(columns = ['date_n12M_n12m', 'date_n6M_n6m'])
 print(HICP.shape)
@@ -132,12 +134,10 @@ meatProdTrade.columns = [''.join(col) for col in meatProdTrade.columns.values]
 
 import functools as ft
 #extraVars = [hriPesticide, orgProcessors, orgAreaUtil, countryGini, cropProdTotals_Geo_Y, birdBiodiversity, emplyomentRate, income, fertUse, productivityIndex, wasteGeneration]
-extraVars = [HICP, foodPrice, marketPrices, prodInIndustry, poultry, meatProdTrade]
+extraVars = [HICP, foodPrice, marketPrices, prodInIndustry, prodInIndustry, meatProdTrade]
 rds = ft.reduce(lambda left, right: pd.merge(left,right, how='left', on=['geo', 'date']), extraVars)
 
-
 rds = rds.loc[(rds['date'] >= '2009-01-01') & (rds['date'] <='2020-12-31')]
-rds = pd.merge(rds, rds, left_on=['geo', 'date'], right_on=['geo', 'date_l6m'], how='inner', suffixes=('','_l6m'))
 print(missing_values_table(rds))
 
 
@@ -153,29 +153,25 @@ rds = rds.fillna(rds.groupby(['year_var']).transform('mean'))
 print(missing_values_table(rds))
 
 
+rds.set_index(["geo","date"], inplace=True)
+
+rds_mean_l3m = rds.groupby('geo').rolling(window=3, min_periods=1).mean().reset_index(level=0, drop=True)
+rds_mean_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).mean().reset_index(level=0, drop=True)
+rds_max_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).max().reset_index(level=0, drop=True)
+rds_min_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).min().reset_index(level=0, drop=True)
+rds_sum_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).sum().reset_index(level=0, drop=True)
+rds_mean_l3m.info()
+
+rds = pd.merge(rds, rds_mean_l3m,on=['geo', 'date'], how='left', suffixes=('','mean_l3m'))
+rds = pd.merge(rds, rds_mean_l6m, on=['geo', 'date'], how='left', suffixes=('','mean_l6m'))
+rds = pd.merge(rds, rds_max_l6m, on=['geo', 'date'], how='left', suffixes=('','max_l6m'))
+rds = pd.merge(rds, rds_min_l6m, on=['geo', 'date'], how='left', suffixes=('','min_l6m'))
+rds = pd.merge(rds, rds_sum_l6m, on=['geo', 'date'], how='left', suffixes=('','sum_l6m'))
+
+
+#rds.set_index(["geo","date"], inplace=True)
+
 rds.to_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\referenceDataSet.csv")
-
-rdsSample= rds[rds['geo'].isin(['IE','DK'])]
-rdsSample = rdsSample[rdsSample['HICP']!=-2.5]
-
-datesForBackfillAverages= pd.DataFrame(pd.date_range('2009-01-01','2020-12-31' , freq='1M')-pd.offsets.MonthBegin(1), columns=['date'])
-datesForBackfillAverages= pd.date_range('2009-01-01','2020-12-31' , freq='1M')-pd.offsets.MonthBegin(1)
-
-rdsSample.set_index(["geo","date"], inplace=True)
-rdsSample = rdsSample.reindex(datesForBackfillAverages)
-rdsSample.index = pd.DatetimeIndex(s.index)
-datesForBackfillAverages['test']=1
-rdsSample = datesForBackfillAverages.merge(rdsSample, on='date', left_index=True, how='cross')
-
-rdsTest = pd.merge(datesForBackfillAverages, rdsSample, how='left', on='date')
-
-rdsSample2.set_index(["geo","date"], inplace=True)
-rdsSample2 = rdsSample2.fillna(method='bfill')
-rds_mean_l3m = rdsSample2.groupby('geo').rolling(window=3, min_periods=1).mean()
-rds_mean_l6m = rdsSample2.groupby('geo').rolling(window=6, min_periods=1).mean()
-
-
-
 
 
 
