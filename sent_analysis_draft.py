@@ -9,21 +9,16 @@ Created on Tue Jan  3 20:18:47 2023
 
 import pandas as pd
 import numpy as np
-from datetime import datetime
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 
 import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import RegexpTokenizer
 from nltk.stem import WordNetLemmatizer
-from nltk.stem import PorterStemmer
 from nltk import FreqDist
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 import re
-import spacy
-import en_core_web_sm
+
 
 redditComments = pd.read_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\redditCommentsFoodInflation.csv")
 redditComments['Date']= pd.to_datetime(redditComments['Date'],unit='s')
@@ -72,8 +67,8 @@ plt.axis('off');
 plt.show()
 
 
-x, y = np.ogrid[:300, :300]
-mask = (x - 150) ** 2 + (y - 150) ** 2 > 130 ** 2
+x, y = np.ogrid[:400, :400]
+mask = (x - 200) ** 2 + (y - 200) ** 2 > 130 ** 2
 mask = 255 * mask.astype(int)
 
 ax2 = WordCloud(background_color="white", repeat=True, mask=mask, random_state=2,)
