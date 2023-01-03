@@ -34,7 +34,8 @@ unitCodes = pd.read_csv("C:/Users/cianw/Documents/dataAnalytics/CA2/Data/Eurosta
 fordCodes = pd.read_csv("C:/Users/cianw/Documents/dataAnalytics/CA2/Data/Eurostat/Code Dictionary/ford.dic",sep='\t',names=['ford', 'units'], header = None)
 nacer2 = pd.read_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\dic\nace_r2.dic",sep='\t',names=['nace_r2', 'units'], header = None)
 
-HICP_Path = Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\prc_hicp_manr_linear.csv")
+hicp_ROC_Path = Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\prc_hicp_manr_linear.csv")
+hicp_Path = Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\prc_hicp_midx_linear.csv")
 marketPrices_Path = Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\market-prices-all-products_en.csv")
 prodInIndustry_Path = Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\sts_inpr_m_linear.csv")
 foodPrice_Path= Path(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Food Security\prc_fsc_idx_linear.csv")
@@ -51,27 +52,37 @@ countries = pd.DataFrame(country, columns=['alpha_2', 'alpha_3', 'name'])
 eu = pd.DataFrame(EUROPEAN_UNION, columns=['alpha_3'])
 eu = pd.merge(eu, countries, on='alpha_3', how='inner')
 
-HICP = pd.read_csv(HICP_Path)
-HICP = HICP[HICP['coicop'].isin(['CP00'])]
-HICP['geo'].unique()
-HICP = pd.merge(HICP, eu, left_on='geo', right_on='alpha_2', how='inner')
-HICP.info()
-HICP['date'] = pd.to_datetime(HICP['TIME_PERIOD'])
-HICP['month_var'] = pd.DatetimeIndex(HICP['date']).month
-HICP['year_var'] = pd.DatetimeIndex(HICP['date']).year
-HICP['date_n12M'] = HICP['date'] + pd.offsets.DateOffset(years=+1)
-HICP['date_n6M'] = HICP['date'] + pd.offsets.DateOffset(months=6)
-HICP['date_l6M'] = HICP['date'] + pd.offsets.DateOffset(months=-6)
-HICP = HICP.drop(columns = ['DATAFLOW', 'LAST UPDATE', 'freq', 'unit', 'coicop', 'TIME_PERIOD', 'OBS_FLAG'])
-HICP = HICP.rename(columns = {"OBS_VALUE":"HICP"})
-print(HICP.head(10))
-HICP = pd.merge(HICP, HICP[['geo', 'date_n12M','HICP']], left_on=['geo', 'date'], right_on=['geo', 'date_n12M'],suffixes=('', '_n12m') )
-print(HICP.head(10))
-HICP = pd.merge(HICP, HICP[['geo', 'date_n6M','HICP']],left_on=['geo', 'date'], right_on=['geo', 'date_n6M'],suffixes=('', '_n6m') )
-HICP = HICP.drop(columns = ['date_n12M_n12m', 'date_n6M_n6m'])
-print(HICP.shape)
-print(HICP.info())
-print(HICP.head(10))
+hicp_ROC = pd.read_csv(hicp_ROC_Path)
+hicp_ROC = hicp_ROC[hicp_ROC['coicop'].isin(['CP00'])]
+hicp_ROC = hicp_ROC[['geo', 'TIME_PERIOD', 'OBS_VALUE']]
+hicp_ROC = hicp_ROC.rename(columns = {"OBS_VALUE":"hicp"})
+hicp_ROC['date_roc'] = pd.to_datetime(hicp_ROC['TIME_PERIOD'])
+hicp_ROC['date_roc_n12M'] = hicp_ROC['date_roc'] + pd.offsets.DateOffset(years=+1)
+hicp_ROC['date_roc_l12M'] = hicp_ROC['date_roc'] + pd.offsets.DateOffset(years=-1)
+print(hicp_ROC.head(100))
+print(hicp_ROC.shape)
+hicp_ROC['dupes']=hicp_ROC.duplicated(subset=['geo', 'date_roc_l12M'])
+
+
+hicp = pd.read_csv(hicp_Path)
+hicp = hicp[hicp['coicop'].isin(['CP00'])]
+hicp = hicp[hicp['unit'].isin(['I15'])]
+hicp = pd.merge(hicp, eu, left_on='geo', right_on='alpha_2', how='inner')
+hicp.info()
+print(hicp.shape)
+hicp['date'] = pd.to_datetime(hicp['TIME_PERIOD'])
+hicp['month_var'] = pd.DatetimeIndex(hicp['date']).month
+hicp['year_var'] = pd.DatetimeIndex(hicp['date']).year
+hicp['date_n12m'] = hicp['date'] + pd.offsets.DateOffset(years=+1)
+hicp = hicp.drop(columns = ['DATAFLOW', 'LAST UPDATE', 'freq', 'unit', 'coicop', 'TIME_PERIOD', 'OBS_FLAG'])
+hicp = hicp.rename(columns = {"OBS_VALUE":"hicp"})
+hicp = pd.merge(hicp, hicp_ROC[['geo', 'date_roc_l12M','hicp']], how='left', left_on=['geo', 'date'], right_on=['geo', 'date_roc_l12M'],suffixes=('', '_ROC') )
+hicp = pd.merge(hicp, hicp[['geo', 'date_n12m','hicp']], how='left', left_on=['geo', 'date'], right_on=['geo', 'date_n12m'],suffixes=('', '_n12m') )
+hicp['dupes']=hicp.duplicated(subset=['geo', 'date'])
+hicp = hicp[['geo', 'date', 'month_var', 'year_var', 'date_n12m', 'hicp_ROC', 'hicp', 'hicp_n12m']]
+print(hicp.shape)
+print(hicp.info())
+print(hicp.head(10))
 
 
 foodPrice = pd.read_csv(foodPrice_Path)
@@ -134,8 +145,9 @@ meatProdTrade.columns = [''.join(col) for col in meatProdTrade.columns.values]
 
 import functools as ft
 #extraVars = [hriPesticide, orgProcessors, orgAreaUtil, countryGini, cropProdTotals_Geo_Y, birdBiodiversity, emplyomentRate, income, fertUse, productivityIndex, wasteGeneration]
-extraVars = [HICP, foodPrice, marketPrices, prodInIndustry, prodInIndustry, meatProdTrade]
+extraVars = [hicp, foodPrice, marketPrices, prodInIndustry, prodInIndustry, meatProdTrade]
 rds = ft.reduce(lambda left, right: pd.merge(left,right, how='left', on=['geo', 'date']), extraVars)
+print(rds.shape)
 
 rds = rds.loc[(rds['date'] >= '2009-01-01') & (rds['date'] <='2020-12-31')]
 print(missing_values_table(rds))
@@ -166,14 +178,12 @@ rds = pd.merge(rds, rds_mean_l3m,on=['geo', 'date'], how='left', suffixes=('','m
 rds = pd.merge(rds, rds_mean_l6m, on=['geo', 'date'], how='left', suffixes=('','mean_l6m'))
 rds = pd.merge(rds, rds_max_l6m, on=['geo', 'date'], how='left', suffixes=('','max_l6m'))
 rds = pd.merge(rds, rds_min_l6m, on=['geo', 'date'], how='left', suffixes=('','min_l6m'))
-rds = pd.merge(rds, rds_sum_l6m, on=['geo', 'date'], how='left', suffixes=('','sum_l6m'))
+rds = pd.merge(rds, rds_sum_l6m, on=['geo', 'date'], how='left', suffixes=('','sum_l6m')).reset_index()
 
 
 #rds.set_index(["geo","date"], inplace=True)
 
 rds.to_csv(r"C:\Users\cianw\Documents\dataAnalytics\CA2\Data\Datasets\referenceDataSet.csv")
-
-
 
 
 

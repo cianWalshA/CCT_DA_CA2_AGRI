@@ -30,28 +30,28 @@ rds['date'] = pd.to_datetime(rds['date'])
 
 fig, ax1 = plt.subplots(figsize=(10,6))
 ax1.set_title("Trend in HICP by Country")
-sns.lineplot(data=rds, x="date", y="hicp_ROC", hue='geo')
+sns.lineplot(data=rds, x="date", y="HICP", hue='geo')
 ax1.set_xlabel('Month')
-ax1.set_ylabel('hicp_ROC')
+ax1.set_ylabel('HICP')
 ax1.figure.tight_layout()
 ax1.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230103\Stats\HICP_TREND.png', dpi= 600)
 plt.show()
 
 fig, ax2 = plt.subplots(figsize=(10,6))
 ax2.set_title("Trend in HICP")
-sns.lineplot(data=rds, x="date", y="hicp_ROC")
+sns.lineplot(data=rds, x="date", y="HICP")
 ax2.set_xlabel('Month')
-ax2.set_ylabel('hicp_ROC')
+ax2.set_ylabel('HICP')
 ax2.figure.tight_layout()
 ax2.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230103\Stats\HICP_TOTAL_TREND.png', dpi= 600) 
 plt.show()
 
 fig, ax3 = plt.subplots(figsize=(10,6))
 ax3.set_title("Ireland's Trend in HICP")
-sns.lineplot(data=rds[rds['geo']=='IE'], x="date", y="hicp_ROC", color="red", label = 'Ireland')
-sns.lineplot(data=rds[rds['geo']!='IE'], x="date", y="hicp_ROC", label = 'Other EU Countries')
+sns.lineplot(data=rds[rds['geo']=='IE'], x="date", y="HICP", color="red", label = 'Ireland')
+sns.lineplot(data=rds[rds['geo']!='IE'], x="date", y="HICP", label = 'Other EU Countries')
 ax3.set_xlabel('Month')
-ax3.set_ylabel('hicp_ROC')
+ax3.set_ylabel('HICP')
 ax3.legend()
 ax3.figure.tight_layout()
 ax3.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230103\Stats\HICP_IE_TREND.png', dpi= 600) 
@@ -68,30 +68,21 @@ This section will compare populations, such as early Harmonised Risk vs later, e
 """
 Change in Risk
 """
-hicp_IE = rdsIreland[['date', 'geo', 'hicp_ROC', 'year_var']]
-hicp_Other = rdsOther[['date', 'geo', 'hicp_ROC', 'year_var']]
+HICP = rds[['TIME_PERIOD', 'geo', 'harmRiskInd']]
+hri_14_15 = hri[hri['TIME_PERIOD'].isin([2014, 2015, 2016])]
+hri_18_19 = hri[hri['TIME_PERIOD'].isin([2018, 2019, 2020])]
 
-hicp_IE_Year = hicp_IE.groupby('year_var')['hicp_ROC'].mean().reset_index()
-hicp_Other_Year = hicp_Other.groupby(['year_var', 'geo'])['hicp_ROC'].mean().reset_index()
+print(shapiro(hri_14_15['harmRiskInd']))
+print(kstest(hri_14_15['harmRiskInd'], 'norm'))
 
-hicp_IE_Year_2009 = hicp_IE_Year[hicp_IE_Year['year_var']==2009]
-hicp_Other_Year_2009 = hicp_Other_Year[hicp_Other_Year['year_var']==2009]
-
-hicp_IE_Year_2014 = hicp_IE_Year[hicp_IE_Year['year_var']==2014]
-hicp_Other_Year_2014 = hicp_Other_Year[hicp_Other_Year['year_var']==2014]
-
-hicp_IE_Year_2019 = hicp_IE_Year[hicp_IE_Year['year_var']==2019]
-hicp_Other_Year_2019 = hicp_Other_Year[hicp_Other_Year['year_var']==2019]
-
-print(shapiro(hicp_Other_Year_2009['hicp_ROC']))
-print(kstest(hicp_Other_Year_2009['hicp_ROC'], 'norm'))
+print(shapiro(hri_18_19['harmRiskInd']))
+print(kstest(hri_18_19['harmRiskInd'], 'norm'))
 
 #It is clear these are all non normal distributions, lets plot to investigate similarities
 
-sns.histplot(data = hicp_Other_Year_2009 , x = 'hicp_ROC', color="skyblue", label="previous", kde=True)
+sns.histplot(data = hri_14_15 , x = 'harmRiskInd', color="skyblue", label="previous", kde=True)
+sns.histplot(data = hri_18_19 , x= 'harmRiskInd', color="red", label="Current" , kde=True)
 plt.show()
-
-print()
 
 #It definitely appears that the risk levels have in general shifted down, with some exceptions.
 #As the data is shown as non normal using Shapiro and KSTEST, will compare using nonparametric tests.
