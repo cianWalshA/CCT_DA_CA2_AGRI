@@ -166,19 +166,26 @@ print(missing_values_table(rds))
 
 
 rds.set_index(["geo","date"], inplace=True)
+rdsNo_n12m= rds.drop(columns=list(rds.filter(regex=r'n12m|year|month').columns))
 
-rds_mean_l3m = rds.groupby('geo').rolling(window=3, min_periods=1).mean().reset_index(level=0, drop=True)
-rds_mean_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).mean().reset_index(level=0, drop=True)
-rds_max_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).max().reset_index(level=0, drop=True)
-rds_min_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).min().reset_index(level=0, drop=True)
-rds_sum_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).sum().reset_index(level=0, drop=True)
-rds_mean_l3m.info()
+#rds_mean_l3m = rds.groupby('geo').rolling(window=3, min_periods=1).mean().reset_index(level=0, drop=True)
+rds_mean_l6m = rdsNo_n12m.groupby('geo').rolling(window=6, min_periods=1).mean().reset_index(level=0, drop=True)
+#rds_max_l6m = rds.groupby('geo').rolling(window=6, min_periods=1).max().reset_index(level=0, drop=True)
+rds_min_l6m = rdsNo_n12m.groupby('geo').rolling(window=6, min_periods=1).min().reset_index(level=0, drop=True)
+rds_sum_l6m = rdsNo_n12m.groupby('geo').rolling(window=6, min_periods=1).sum().reset_index(level=0, drop=True)
+rds_lag_diff_6m = rdsNo_n12m.groupby('geo').diff(periods=6).reset_index(level=0)
+rds_lag_diff_3m = rdsNo_n12m.groupby('geo').diff(periods=3).reset_index(level=0)
+rds_lag_diff_1m = rdsNo_n12m.groupby('geo').diff(periods=1).reset_index(level=0)
 
-rds = pd.merge(rds, rds_mean_l3m,on=['geo', 'date'], how='left', suffixes=('','mean_l3m'))
-rds = pd.merge(rds, rds_mean_l6m, on=['geo', 'date'], how='left', suffixes=('','mean_l6m'))
-rds = pd.merge(rds, rds_max_l6m, on=['geo', 'date'], how='left', suffixes=('','max_l6m'))
-rds = pd.merge(rds, rds_min_l6m, on=['geo', 'date'], how='left', suffixes=('','min_l6m'))
-rds = pd.merge(rds, rds_sum_l6m, on=['geo', 'date'], how='left', suffixes=('','sum_l6m')).reset_index()
+
+#rds = pd.merge(rds, rds_mean_l3m,on=['geo', 'date'], how='left', suffixes=('','mean_l3m'))
+rds = pd.merge(rds, rds_mean_l6m, on=['geo', 'date'], how='left', suffixes=('','_mean_l6m'))
+#rds = pd.merge(rds, rds_max_l6m, on=['geo', 'date'], how='left', suffixes=('','max_l6m'))
+rds = pd.merge(rds, rds_min_l6m, on=['geo', 'date'], how='left', suffixes=('','_min_l6m'))
+rds = pd.merge(rds, rds_lag_diff_6m, on=['geo', 'date'], how='left', suffixes=('','_diff_6m'))
+rds = pd.merge(rds, rds_lag_diff_3m, on=['geo', 'date'], how='left', suffixes=('','_diff_3m'))
+rds = pd.merge(rds, rds_lag_diff_1m, on=['geo', 'date'], how='left', suffixes=('','_diff_1m'))
+rds = pd.merge(rds, rds_sum_l6m, on=['geo', 'date'], how='left', suffixes=('','_sum_l6m')).reset_index()
 
 
 #rds.set_index(["geo","date"], inplace=True)

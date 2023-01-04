@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 sns.set_theme(style="whitegrid")
 
-import matlotlib
+import matplotlib
 import matplotlib.pyplot as plt
 import copy
 import time as time_t
@@ -80,6 +80,12 @@ I have created an absurd amount of features:
     
 """
 
+"""
+******************************************************************************************************************************
+Feature Reduction
+******************************************************************************************************************************
+"""
+
 #Backward Elimination
 cols = list(X_train.columns)
 pmax = 1
@@ -97,6 +103,30 @@ while (len(cols)>0):
         break
     
 selected_features_BE = cols
+"""
+Extra trees performs well, might be worth using for feature selection?
+"""
+
+from sklearn.ensemble import ExtraTreesClassifier
+model_ETR = ExtraTreesRegressor()
+model_ETR.fit(X_train, Y_train)
+print(model_ETR.feature_importances_)
+feat_importances = pd.Series(model_ETR.feature_importances_, index=X_train.columns)
+feat_importances.nlargest(13).plot.bar()
+plt.show()
+list1=feat_importances.keys().to_list()model_ETR = ExtraTreesRegressor()
+
+model_XGB = XGBRegressor()
+model_XGB.fit(X_train, Y_train)
+print(model_XGB.feature_importances_)
+feat_importances = pd.Series(model_XGB.feature_importances_, index=X_train.columns)
+feat_importances.nlargest(13).plot.bar()
+plt.show()
+list1=feat_importances.keys().to_list()
+
+"""
+Lasso for Linear Regression, does not converge but perhaps thats a bonus for excluding features?
+"""
 
 #Use Lasso to pick features
 reg = LassoCV()
@@ -116,7 +146,10 @@ step2Columns = pd.DataFrame(coef, columns=['score']).reset_index()
 columnsForModel = step2Columns[step2Columns['score']!=0]
 
 """
-Begin Machine Learning model selection process
+******************************************************************************************************************************
+Model Selection Process.
+    Stuff all features in, see what models perform best.
+******************************************************************************************************************************
 """
 
 X_train, X_temp, Y_train, Y_temp = train_test_split(Xfull[columnsForModel['index']], Yfull, test_size=0.6666, random_state=123)
@@ -202,6 +235,12 @@ ax2.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102
 
 #Test Models = ExtraTrees, XGBoost, RandomForest
 
+"""
+******************************************************************************************************************************
+Hyperparameter Section, perhaps should complete after feature selection?
+******************************************************************************************************************************
+"""
+
 hyperparameters_xgb = {'xgbregressor__max_depth': range(3, 11, 2)
                        ,'xgbregressor__n_estimators' : range(50, 300, 50)
                        ,'xgbregressor__learning_rate' : [ 0.01, 0.05, 0.1, 0.15, 0.2]}
@@ -277,6 +316,12 @@ ax3.set_ylabel('Mean Test Score')
 ax3.set_title("Highest Mean Test Scores for Hyperparameter Combinations")
 ax3.figure.tight_layout()
 ax3.figure.savefig(r'C:\Users\cianw\Documents\dataAnalytics\CA2\Results\20230102\best_score__20230103.png', dpi= 600) 
+
+"""
+******************************************************************************************************************************
+Feature Selection Section, perhaps should complete before Hyperparameter selection?
+******************************************************************************************************************************
+"""
 
 #Create a final Train 
 X = np.vstack((X_train, X_val))
